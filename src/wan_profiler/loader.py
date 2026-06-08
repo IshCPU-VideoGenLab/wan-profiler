@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 # HuggingFace model identifiers for Wan variants
 MODEL_REGISTRY: Dict[str, str] = {
-    "wan-1.3b": "Wan-AI/Wan2.1-T2V-1.3B",
+    # Diffusers-format repo (subfolder layout). The flat repo
+    # "Wan-AI/Wan2.1-T2V-1.3B" is NOT loadable via diffusers from_pretrained.
+    "wan-1.3b": "Wan-AI/Wan2.1-T2V-1.3B-Diffusers",
 }
 
 
@@ -165,36 +167,33 @@ def load_model(
             "Tight memory. Proceeding with aggressive memory optimization."
         )
 
-    # Resolve model path
-    if model_path is None:
-        model_path = download_model(model_name)
-
-    logger.info("Loading model from: %s", model_path)
+    # Resolve the source: a local path, or the HuggingFace repo id.
+    # We load ONLY the diffusion transformer subfolder, so diffusers fetches
+    # just the ~1.4B-param DiT — never the ~11 GB T5 text encoder that also
+    # lives in the pipeline. The text encoder is not part of the per-step
+    # denoising compute this profiler measures.
+    source = model_path if model_path is not None else get_model_id(model_name)
+    logger.info("Loading Wan diffusion transformer (DiT) from: %s", source)
 
     # Force garbage collection before loading
     gc.collect()
 
     try:
-        from transformers import AutoModel
+        from diffusers import WanTransformer3DModel
 
-        load_kwargs = {
-            "pretrained_model_name_or_path": model_path,
-            "torch_dtype": torch_dtype,
-            "trust_remote_code": True,
-        }
-
-        if low_memory:
-            load_kwargs["low_cpu_mem_usage"] = True
-            logger.info("Using low_cpu_mem_usage for memory-efficient loading")
-
-        model = AutoModel.from_pretrained(**load_kwargs)
+        model = WanTransformer3DModel.from_pretrained(
+            source,
+            subfolder="transformer",
+            torch_dtype=torch_dtype,
+            low_cpu_mem_usage=low_memory,
+        )
         model.eval()
 
         # Count parameters
         total_params = sum(p.numel() for p in model.parameters())
         trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         logger.info(
-            "Model loaded. Parameters: %s total (%.2f B), %s trainable",
+            "DiT loaded. Parameters: %s total (%.2f B), %s trainable",
             f"{total_params:,}",
             total_params / 1e9,
             f"{trainable_params:,}",
