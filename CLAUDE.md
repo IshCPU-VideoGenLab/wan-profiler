@@ -48,31 +48,17 @@ Each pillar eliminates a GPU dependency. Combined, they make CPU-native video ge
 
 ---
 
-## Hardware Constraints — READ THIS CAREFULLY
+## Hardware — READ THIS CAREFULLY
 
-Every line of code in this project must respect the **benchmark target** below. This is the
-canonical "thesis machine" — the bar the paper reports against. The guiding principle:
-*if it runs on a Pentium Gold, it runs anywhere.*
+- **Primary (development + benchmarking):** MacBook Air M4 — ARM64 / NEON, no GPU.
+- **Supported, CI-verified:** commodity x86 with AVX2 (any modern Intel/AMD CPU).
+- **Origin, proof-of-concept (retired):** Intel Pentium Gold 7505 — x86-64 / AVX2, 2C/4T, 16 GB.
 
-**Benchmark target (the thesis machine):**
-
-| Spec       | Value                              |
-|------------|-------------------------------------|
-| CPU        | Intel Pentium Gold 7505 (x86-64, AVX2) |
-| Cores      | 2 cores / 4 threads                 |
-| Clock      | Up to 3.5 GHz                       |
-| RAM        | 16 GB DDR4 3200 MHz (single channel)|
-| GPU        | Intel UHD Graphics (integrated)     |
-| Storage    | ~100 GB available                   |
-| Python     | 3.9                                 |
-| Env        | venv (no conda)                     |
-| OS         | Code must be OS- and arch-portable (Linux / macOS / Windows) |
-
-**Development machine:** the original HP/Pentium laptop was retired, so day-to-day development now
-happens on a **MacBook Air M4 (ARM64)**. This is *not* a relaxation of the thesis — it's why Phase 5
-is a **portable SIMD library** (AVX2 + NEON + scalar), not x86-only kernels. Never write code that
-assumes a specific ISA: the Pentium Gold (x86/AVX2) and the M4 (ARM/NEON) must both work, and the
-paper reports CPU-native results on both architectures.
+CPU-native, no GPU, across **both** architectures. We develop on the M4, but **all code must stay
+within the commodity-hardware design budget** — assume **2–4 cores, 16 GB RAM (~12 GB usable),
+no GPU**, and it must run on x86 (AVX2) **and** ARM (NEON). Never write code that assumes a specific
+ISA, many cores, large RAM, or a GPU. The Pentium Gold proved the weakest-hardware case; the paper
+reports CPU-native results on both architectures. Python 3.9, venv (no conda).
 
 ### What This Means For Code:
 
