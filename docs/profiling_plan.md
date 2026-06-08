@@ -42,9 +42,10 @@ PyTorch tensors. This is an approximation.
 ## Experimental Setup
 
 ### Hardware
-- Intel Pentium Gold 7505 (2 cores, 4 threads, 3.5 GHz)
-- 16 GB DDR4 3200 MHz (single channel)
-- No discrete GPU
+- **Primary (dev + benchmark):** Apple MacBook Air M4 — ARM64 / NEON, no GPU
+- **Supported, CI-verified:** commodity x86 with AVX2 (any modern Intel/AMD CPU)
+- **Origin (retired PoC):** Intel Pentium Gold 7505 — x86-64 / AVX2, 2C/4T, 16 GB DDR4, no GPU
+- Design budget: assume 2–4 cores, 16 GB RAM, CPU-only
 
 ### Software
 - Python 3.9
