@@ -88,7 +88,7 @@ The profiling data answers these specific questions for Phase 2+:
 | What % of time is spent in attention? | Phase 2 (Mamba replacement priority) |
 | What % of time is spent in FFN layers? | Phase 4 (BitNet quantization targets) |
 | How much temporal redundancy exists? | Phase 3 (codec design opportunity) |
-| What's the memory bottleneck? | Phase 5 (AVX2 kernel memory layout) |
+| What's the memory bottleneck? | Phase 5 (SIMD kernel memory layout) |
 | What operations are trivially CPU-friendly? | What we can keep as-is |
 
 ## Reproducibility
