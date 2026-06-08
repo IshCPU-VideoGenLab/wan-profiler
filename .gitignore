@@ -7,10 +7,13 @@ dist/
 build/
 *.egg
 
-# Virtual environment
+# Virtual environment (any name: venv, .venv, .venv312, my-venv, ...)
 venv/
 env/
 .venv/
+.venv*/
+*venv/
+*.venv/
 
 # IDE
 .vscode/
