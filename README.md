@@ -45,16 +45,17 @@ The thesis: by combining **BitNet quantization**, **Mamba/SSM architecture**, **
 
 ## Hardware Target
 
-This project is developed and benchmarked on:
+CPU-native means **no GPU**, on **commodity hardware**, across **both architectures** (x86 and ARM):
 
-| Component | Spec |
-|-----------|------|
-| CPU | Intel Pentium Gold 7505 (2 cores / 4 threads, 3.5 GHz) |
-| RAM | 16 GB DDR4 3200 MHz |
-| GPU | None (Intel UHD integrated only) |
-| Storage | ~100 GB |
+| Role | Machine | Spec |
+|------|---------|------|
+| **Primary** — development + benchmarking | Apple MacBook Air M4 | ARM64 / NEON, 10 cores, 16–24 GB unified memory, no discrete GPU |
+| **Supported** — verified in CI | Commodity x86 with AVX2 | any modern Intel/AMD CPU |
+| **Origin** — proof-of-concept (retired) | Intel Pentium Gold 7505 | x86-64 / AVX2, 2C/4T, 16 GB DDR4, no GPU |
 
-**If it runs here, it runs everywhere.** That's the point.
+The portable SIMD kernels (Phase 5) run natively on x86 (AVX2) and ARM (NEON), so the
+"runs on commodity hardware, no CUDA" claim holds **across architectures** — not just one machine.
+The project began on the Pentium Gold to prove the thesis on the weakest plausible hardware.
 
 ---
 
