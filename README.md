@@ -35,11 +35,11 @@ This is **Phase 1** of a 7-phase research project:
 | 2 | mamba-video | Replace attention with Mamba/SSM blocks |
 | 3 | codec-video-gen | Codec-inspired temporal design (I-frames + P-frame deltas) |
 | 4 | bitnet-video | 1-bit quantization (BitNet) |
-| 5 | avx2-kernels | Native AVX2 CPU execution engine |
+| 5 | simd-kernels | Portable SIMD execution engine (AVX2 + NEON) |
 | 6 | (distributed) | Zeroth-order distributed CPU training |
 | 7 | cpu-video-gen | Flagship paper repo with full pipeline |
 
-The thesis: by combining **BitNet quantization**, **Mamba/SSM architecture**, **codec-inspired temporal compression**, and **AVX2 CPU kernels**, video generation becomes feasible on commodity hardware — no CUDA required.
+The thesis: by combining **BitNet quantization**, **Mamba/SSM architecture**, **codec-inspired temporal compression**, and **portable SIMD kernels (AVX2 + NEON)**, video generation becomes feasible on commodity hardware — across both x86 and ARM, no CUDA required.
 
 ---
 
