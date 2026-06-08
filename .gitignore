@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Results (keep structure, ignore outputs)
+results/*.json
+results/*.png
+results/*.csv
+results/*.html
+!results/.gitkeep
+
+# Model weights (never commit these)
+model_weights/
+*.bin
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
