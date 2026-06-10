@@ -201,18 +201,20 @@ def create_dummy_input(
     resolution: Tuple[int, int] = (256, 256),
     dtype_str: str = "float16",
 ) -> Dict[str, Any]:
-    """Create a dummy input for the Wan model forward pass.
+    """Create a dummy input for the Wan diffusion transformer (DiT) forward pass.
 
-    The exact input format depends on the Wan model's expected interface.
-    This function creates a minimal input to trigger a full forward pass.
+    Matches ``WanTransformer3DModel.forward(hidden_states, timestep,
+    encoder_hidden_states)``. The text embedding is a DUMMY tensor of the
+    correct shape (text_dim = 4096), so we never need to load the ~11 GB T5
+    text encoder just to profile where the DiT spends compute.
 
     Args:
-        num_frames: Number of video frames.
-        resolution: (height, width) of each frame.
+        num_frames: Number of pixel-space video frames.
+        resolution: (height, width) of each pixel-space frame.
         dtype_str: Data type string.
 
     Returns:
-        Dictionary of input tensors.
+        Dictionary of input tensors keyed by the DiT's forward argument names.
     """
     import torch
 
@@ -224,23 +226,28 @@ def create_dummy_input(
     dtype = dtype_map.get(dtype_str, torch.float16)
 
     h, w = resolution
-    # Latent space dimensions (typical for diffusion models)
-    # Wan uses a VAE that compresses by 8x spatially
+    # Wan VAE compresses 8x spatially and ~4x temporally; the DiT latent has
+    # 16 channels. Keeping the token count modest (<= rope_max_seq_len=1024)
+    # is enough to exercise every module for profiling.
     latent_h = h // 8
     latent_w = w // 8
-    latent_channels = 4  # Standard for most diffusion models
+    latent_frames = max(1, num_frames // 4)
+    latent_channels = 16
+    text_seq_len = 512   # dummy prompt length
+    text_dim = 4096      # umt5-xxl embedding dim (WanTransformer3DModel.text_dim)
 
     dummy_input = {
-        "latents": torch.randn(
-            1, latent_channels, num_frames, latent_h, latent_w,
-            dtype=dtype,
+        "hidden_states": torch.randn(
+            1, latent_channels, latent_frames, latent_h, latent_w, dtype=dtype,
         ),
         "timestep": torch.tensor([500], dtype=torch.long),
+        "encoder_hidden_states": torch.randn(1, text_seq_len, text_dim, dtype=dtype),
     }
 
     logger.info(
-        "Created dummy input: latents shape %s, dtype %s",
-        list(dummy_input["latents"].shape),
+        "Created dummy DiT input: hidden_states %s, encoder_hidden_states %s, dtype %s",
+        list(dummy_input["hidden_states"].shape),
+        list(dummy_input["encoder_hidden_states"].shape),
         dtype,
     )
     return dummy_input
@@ -298,7 +305,7 @@ def profile_model(config: Any) -> ProfileResults:
                 logger.warning("Warmup step %d failed: %s", i, str(e))
                 logger.info("Trying alternative forward pass...")
                 try:
-                    model(dummy_input["latents"], dummy_input["timestep"])
+                    model(dummy_input["hidden_states"], dummy_input["timestep"], dummy_input["encoder_hidden_states"])
                 except Exception as e2:
                     logger.error("Alternative forward pass also failed: %s", str(e2))
                     break
@@ -317,7 +324,7 @@ def profile_model(config: Any) -> ProfileResults:
                 model(**dummy_input)
             except Exception:
                 try:
-                    model(dummy_input["latents"], dummy_input["timestep"])
+                    model(dummy_input["hidden_states"], dummy_input["timestep"], dummy_input["encoder_hidden_states"])
                 except Exception as e:
                     logger.error("Profiling step %d failed: %s", i, str(e))
                     continue
