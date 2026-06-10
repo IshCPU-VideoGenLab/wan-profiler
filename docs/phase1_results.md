@@ -9,7 +9,7 @@ tool on the Wan 2.1 T2V 1.3B diffusion transformer (DiT), CPU-only, bfloat16.
 - Note: only the **DiT** is loaded — the ~11 GB T5 text encoder is replaced by a
   dummy 4096-dim embedding, so profiling fits comfortably in 16 GB.
 
-## Table 1 — where the compute goes (256 latent tokens, 40 layers)
+## Table 1 — where the compute goes (256 latent tokens, 30 blocks)
 
 Exclusive ("self") time per category, sums to ~100%:
 
