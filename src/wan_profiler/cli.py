@@ -177,7 +177,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 1
     except MemoryError as e:
         logger.error("Out of memory: %s", str(e))
-        logger.error("Try: --low-memory --dtype float16 --frames 4 --resolution 128 128")
+        logger.error("Try: --low-memory --dtype bfloat16 --frames 4 --resolution 128 128")
         return 1
     except Exception as e:
         logger.error("Profiling failed: %s", str(e), exc_info=True)

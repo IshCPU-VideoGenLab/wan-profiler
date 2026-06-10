@@ -68,7 +68,7 @@ class ProfileConfig:
     model_path: Optional[str] = None
     output_dir: str = "results"
     low_memory: bool = True
-    dtype: str = "float16"
+    dtype: str = "bfloat16"  # CPU-safe; float16 ops are largely unimplemented on CPU
     profile_time: bool = True
     profile_flops: bool = False
     profile_memory: bool = False

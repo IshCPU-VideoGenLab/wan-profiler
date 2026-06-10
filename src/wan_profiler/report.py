@@ -52,11 +52,41 @@ def results_to_dict(results: Any) -> Dict[str, Any]:
     # Sort by time descending
     per_module.sort(key=lambda x: x["avg_time_ms"], reverse=True)
 
-    # Category summary
+    # Category summary via EXCLUSIVE ("self") time, robust to untimed
+    # intermediate containers (e.g. nn.ModuleList, whose forward hook never
+    # fires). Each timed module's time is attributed to its NEAREST TIMED
+    # ANCESTOR; self_time = time - sum(times of its timed descendants that
+    # have no closer timed ancestor). This makes categories sum to ~100%
+    # (previously ~300% from double-counting parents) and keeps attention's
+    # scaled-dot-product compute (done inside the attention module, not a
+    # child Linear) correctly in the "attention" bucket.
+    ROOT_NAMES = {"", "(root)"}
+    timed = {e["name"] for e in per_module if e["avg_time_ms"] > 0}
+    root_name = next((e["name"] for e in per_module if e["name"] in ROOT_NAMES), None)
+
+    def _nearest_timed_ancestor(name: str) -> Optional[str]:
+        if name in ROOT_NAMES:
+            return None
+        parts = name.split(".")
+        for i in range(len(parts) - 1, 0, -1):
+            anc = ".".join(parts[:i])
+            if anc in timed:
+                return anc
+        return root_name  # fall back to the model root
+
+    child_time: Dict[str, float] = {}
+    for entry in per_module:
+        if entry["avg_time_ms"] <= 0:
+            continue
+        anc = _nearest_timed_ancestor(entry["name"])
+        if anc is not None:
+            child_time[anc] = child_time.get(anc, 0.0) + entry["avg_time_ms"]
+
     category_times: Dict[str, float] = {}
     for entry in per_module:
+        self_time = max(0.0, entry["avg_time_ms"] - child_time.get(entry["name"], 0.0))
         cat = entry["category"]
-        category_times[cat] = category_times.get(cat, 0) + entry["avg_time_ms"]
+        category_times[cat] = category_times.get(cat, 0) + self_time
 
     category_summary = []
     for cat, total_ms in sorted(category_times.items(), key=lambda x: -x[1]):
